@@ -166,8 +166,7 @@ npm run build
 
 ### Backend Architecture
 - **Express**: REST API framework
-- **Drizzle ORM**: Type-safe database operations
-- **Neon PostgreSQL**: Serverless database
+- **In-Memory Storage**: Fast session data storage (with Drizzle ORM/PostgreSQL schema support for future migration)
 - **Zod**: Runtime type validation
 
 ### Data Flow
