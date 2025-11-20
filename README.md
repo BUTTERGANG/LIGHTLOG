@@ -91,8 +91,7 @@ npm run dev
 - **Node.js** - Runtime environment
 - **Express** - Web framework
 - **TypeScript** - Type safety
-- **Drizzle ORM** - Database toolkit
-- **Neon Database** - Serverless PostgreSQL
+- **In-Memory Storage** - Fast session data storage (with Drizzle ORM/PostgreSQL schema support for future migration)
 - **Zod** - Schema validation
 
 ### Key Libraries
@@ -133,9 +132,9 @@ LIGHTLOG/
 npm run dev          # Start development server
 npm run build        # Build for production
 npm run preview      # Preview production build
-npm run db:generate  # Generate database migrations
-npm run db:migrate   # Run database migrations
 ```
+
+Note: The app currently uses in-memory storage. Database migration scripts are available for future PostgreSQL implementation.
 
 ### API Endpoints
 ```
