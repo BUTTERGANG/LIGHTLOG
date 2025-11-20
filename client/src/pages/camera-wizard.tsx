@@ -5,26 +5,13 @@ import { fetchWeather } from '@/lib/api-client';
 import { formatDegrees, formatTemperature, formatPercentage } from '@/lib/utils';
 
 /**
- * Camera Wizard Page Component
+ * Camera Wizard Page - Enhanced with Dramatic Visual Design
  *
- * IMPLEMENTATION NOTES FOR AI ARCHITECT:
+ * Features:
  * - AI-powered camera settings recommendations
- * - Based on sun position, weather, and time of day
- * - Provides ISO, aperture, shutter speed suggestions
- * - Includes photography tips for current conditions
- *
- * ALGORITHM FOR RECOMMENDATIONS:
- * 1. Determine lighting type from sun elevation
- * 2. Factor in weather conditions (clouds, visibility)
- * 3. Consider moon phase for night photography
- * 4. Apply photography best practices for each scenario
- *
- * TODO FOR IMPLEMENTATION:
- * 1. Implement smart recommendation algorithm
- * 2. Add manual override options
- * 3. Add camera preset selection (portrait, landscape, etc.)
- * 4. Add export/save settings feature
- * 5. Add comparison with previous successful shots
+ * - Beautiful gradient cards for settings
+ * - Responsive layout
+ * - Contextual photography tips
  */
 
 interface CameraRecommendation {
@@ -56,7 +43,6 @@ function generateRecommendations(
   let meteringMode = 'Evaluative';
   const tips: string[] = [];
 
-  // Adjust based on lighting conditions
   if (lightingType === 'Golden Hour') {
     iso = '100-400';
     aperture = 'f/5.6-f/8';
@@ -98,7 +84,6 @@ function generateRecommendations(
     }
   }
 
-  // Adjust for weather
   if (weather) {
     if (weather.cloudCover > 70) {
       tips.push('Overcast conditions - diffused light, great for portraits');
@@ -149,137 +134,172 @@ export default function CameraWizardPage() {
   );
 
   return (
-    <div className="min-h-screen p-4 md:p-8">
-      <div className="max-w-4xl mx-auto space-y-6">
+    <div className="min-h-screen py-6 px-4 sm:px-6 lg:px-8 animate-fade-in">
+      <div className="max-w-5xl mx-auto space-y-6 lg:space-y-8">
         {/* Header */}
-        <div className="text-center space-y-2">
-          <h1 className="text-3xl md:text-4xl font-bold">📸 Camera Settings Wizard</h1>
-          <p className="text-muted-foreground">
-            AI-powered recommendations for optimal camera settings
+        <header className="text-center space-y-3 py-6 animate-slide-up">
+          <h1 className="text-4xl sm:text-5xl font-bold text-gradient">
+            📸 Camera Settings Wizard
+          </h1>
+          <p className="text-lg text-muted-foreground">
+            AI-powered recommendations for {recommendations.lightingType.toLowerCase()}
           </p>
-        </div>
+        </header>
 
-        {/* Current Conditions */}
-        <div className="bg-card rounded-lg p-6 border border-border">
+        {/* Current Conditions Card */}
+        <div className="glass-card">
           <h2 className="text-xl font-bold mb-4">Current Conditions</h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-            <div>
-              <p className="text-muted-foreground">Location</p>
-              <p className="font-semibold">{location.name}</p>
-            </div>
-            <div>
-              <p className="text-muted-foreground">Lighting</p>
-              <p className="font-semibold">{recommendations.lightingType}</p>
-            </div>
-            <div>
-              <p className="text-muted-foreground">Sun Elevation</p>
-              <p className="font-semibold">{formatDegrees(sunPosition.elevation)}</p>
-            </div>
-            {weather && (
-              <div>
-                <p className="text-muted-foreground">Conditions</p>
-                <p className="font-semibold">{weather.description || 'Clear'}</p>
-              </div>
-            )}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <ConditionStat label="Location" value={location.name} icon="📍" />
+            <ConditionStat label="Lighting" value={recommendations.lightingType} icon="💡" />
+            <ConditionStat label="Sun Elevation" value={formatDegrees(sunPosition.elevation)} icon="🌞" />
+            <ConditionStat
+              label="Conditions"
+              value={weather?.description || 'Clear'}
+              icon="🌤️"
+            />
           </div>
         </div>
 
-        {/* Recommendations */}
-        <div className="bg-gradient-to-br from-primary/10 to-secondary/10 rounded-lg p-6 border border-primary/20">
-          <h2 className="text-2xl font-bold mb-6 text-center">
-            Recommended Settings
-          </h2>
+        {/* Hero Recommendations Card */}
+        <div className="relative overflow-hidden rounded-3xl p-8 sm:p-10 bg-gradient-primary glow animate-slide-up">
+          <div className="relative z-10">
+            <h2 className="text-3xl font-bold text-white mb-8 text-center">
+              Recommended Settings
+            </h2>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-            <div className="bg-background/50 backdrop-blur rounded-lg p-4 text-center">
-              <p className="text-sm text-muted-foreground mb-1">ISO</p>
-              <p className="text-2xl font-bold text-primary">{recommendations.iso}</p>
+            {/* Main Settings */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
+              <SettingCard
+                label="ISO"
+                value={recommendations.iso}
+                icon="📊"
+              />
+              <SettingCard
+                label="Aperture"
+                value={recommendations.aperture}
+                icon="⚪"
+              />
+              <SettingCard
+                label="Shutter Speed"
+                value={recommendations.shutterSpeed}
+                icon="⚡"
+              />
             </div>
-            <div className="bg-background/50 backdrop-blur rounded-lg p-4 text-center">
-              <p className="text-sm text-muted-foreground mb-1">Aperture</p>
-              <p className="text-2xl font-bold text-secondary">{recommendations.aperture}</p>
-            </div>
-            <div className="bg-background/50 backdrop-blur rounded-lg p-4 text-center">
-              <p className="text-sm text-muted-foreground mb-1">Shutter Speed</p>
-              <p className="text-2xl font-bold text-accent">{recommendations.shutterSpeed}</p>
+
+            {/* Secondary Settings */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <SecondaryCard label="Mode" value={recommendations.mode} />
+              <SecondaryCard label="Focus" value={recommendations.focus} />
+              <SecondaryCard label="Metering" value={recommendations.meteringMode} />
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="bg-background/30 backdrop-blur rounded-lg p-3">
-              <p className="text-xs text-muted-foreground mb-1">Mode</p>
-              <p className="font-semibold">{recommendations.mode}</p>
-            </div>
-            <div className="bg-background/30 backdrop-blur rounded-lg p-3">
-              <p className="text-xs text-muted-foreground mb-1">Focus</p>
-              <p className="font-semibold">{recommendations.focus}</p>
-            </div>
-            <div className="bg-background/30 backdrop-blur rounded-lg p-3">
-              <p className="text-xs text-muted-foreground mb-1">Metering</p>
-              <p className="font-semibold">{recommendations.meteringMode}</p>
-            </div>
-          </div>
+          {/* Decorative elements */}
+          <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl" />
+          <div className="absolute bottom-0 left-0 w-96 h-96 bg-white/5 rounded-full blur-3xl" />
         </div>
 
         {/* Pro Tips */}
-        <div className="bg-card rounded-lg p-6 border border-border">
-          <h2 className="text-xl font-bold mb-4">💡 Pro Tips</h2>
-          <ul className="space-y-2">
+        <div className="glass-card hover-lift animate-slide-up">
+          <div className="flex items-center gap-3 mb-6">
+            <span className="text-3xl">💡</span>
+            <h2 className="text-2xl font-bold">Pro Tips</h2>
+          </div>
+          <div className="space-y-3">
             {recommendations.tips.map((tip, index) => (
-              <li key={index} className="flex gap-3">
-                <span className="text-primary">•</span>
-                <span className="flex-1">{tip}</span>
-              </li>
+              <div
+                key={index}
+                className="flex gap-4 p-4 rounded-lg bg-primary/5 hover:bg-primary/10 transition-colors"
+              >
+                <span className="flex-shrink-0 w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center text-primary text-sm font-bold">
+                  {index + 1}
+                </span>
+                <span className="flex-1 text-sm leading-relaxed">{tip}</span>
+              </div>
             ))}
-          </ul>
+          </div>
         </div>
 
-        {/* Weather Details */}
-        {weather && (
-          <div className="bg-card rounded-lg p-6 border border-border">
-            <h2 className="text-xl font-bold mb-4">🌤️ Weather Details</h2>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-              <div>
-                <p className="text-muted-foreground">Temperature</p>
-                <p className="text-lg font-semibold">
-                  {formatTemperature(weather.temperature)}
-                </p>
-              </div>
-              <div>
-                <p className="text-muted-foreground">Cloud Cover</p>
-                <p className="text-lg font-semibold">
-                  {formatPercentage(weather.cloudCover)}
-                </p>
-              </div>
-              <div>
-                <p className="text-muted-foreground">Visibility</p>
-                <p className="text-lg font-semibold">
-                  {(weather.visibility / 1000).toFixed(1)} km
-                </p>
-              </div>
-              <div>
-                <p className="text-muted-foreground">Humidity</p>
-                <p className="text-lg font-semibold">
-                  {formatPercentage(weather.humidity)}
-                </p>
+        {/* Weather & Environment Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Weather */}
+          {weather && (
+            <div className="glass-card hover-lift">
+              <h2 className="text-xl font-bold mb-6">🌤️ Weather Details</h2>
+              <div className="grid grid-cols-2 gap-4">
+                <WeatherDetail label="Temperature" value={formatTemperature(weather.temperature)} />
+                <WeatherDetail label="Humidity" value={formatPercentage(weather.humidity)} />
+                <WeatherDetail label="Cloud Cover" value={formatPercentage(weather.cloudCover)} />
+                <WeatherDetail label="Visibility" value={`${(weather.visibility / 1000).toFixed(1)} km`} />
               </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {/* Actions */}
-        <div className="flex gap-4 justify-center">
-          <button className="bg-primary text-primary-foreground px-6 py-3 rounded-lg font-semibold hover:bg-primary/90 transition-colors">
-            Save Settings (TO IMPLEMENT)
+          {/* Moon Phase */}
+          <div className="glass-card hover-lift">
+            <h2 className="text-xl font-bold mb-6">🌙 Moon Phase</h2>
+            <div className="text-center py-4">
+              <p className="text-2xl font-bold mb-2">{moonData.phaseName}</p>
+              <p className="text-muted-foreground">
+                {formatPercentage(moonData.illumination * 100)} illuminated
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Action Buttons */}
+        <div className="flex flex-col sm:flex-row gap-4 justify-center pb-6">
+          <button className="px-8 py-4 rounded-xl bg-gradient-secondary text-white font-semibold hover-lift transition-all">
+            💾 Save Settings (TO IMPLEMENT)
           </button>
           <a
             href="/"
-            className="bg-secondary text-secondary-foreground px-6 py-3 rounded-lg font-semibold hover:bg-secondary/90 transition-colors"
+            className="px-8 py-4 rounded-xl glass text-center font-semibold hover-lift transition-all"
           >
             ← Back to Home
           </a>
         </div>
       </div>
+    </div>
+  );
+}
+
+// Helper Components
+function ConditionStat({ label, value, icon }: { label: string; value: string; icon: string }) {
+  return (
+    <div className="text-center p-3 rounded-lg bg-background/20">
+      <div className="text-2xl mb-1">{icon}</div>
+      <p className="text-xs text-muted-foreground mb-1">{label}</p>
+      <p className="text-sm font-bold truncate">{value}</p>
+    </div>
+  );
+}
+
+function SettingCard({ label, value, icon }: { label: string; value: string; icon: string }) {
+  return (
+    <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 hover:bg-white/15 transition-colors">
+      <div className="text-3xl mb-3">{icon}</div>
+      <p className="text-white/70 text-sm mb-2 uppercase tracking-wide">{label}</p>
+      <p className="text-3xl font-black text-white">{value}</p>
+    </div>
+  );
+}
+
+function SecondaryCard({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="bg-white/5 backdrop-blur-sm rounded-xl p-4">
+      <p className="text-white/60 text-xs mb-1 uppercase">{label}</p>
+      <p className="text-white font-semibold text-sm">{value}</p>
+    </div>
+  );
+}
+
+function WeatherDetail({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="p-4 rounded-lg bg-background/20">
+      <p className="text-xs text-muted-foreground mb-1">{label}</p>
+      <p className="text-lg font-bold">{value}</p>
     </div>
   );
 }
