@@ -29,6 +29,8 @@ yarn-error.log*
 # Build artifacts
 build
 .cache
+client/dist
+.turbo
 
 # Database
 *.db
