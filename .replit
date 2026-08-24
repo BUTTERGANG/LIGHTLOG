@@ -19,6 +19,7 @@ pattern = "**/{*.ts,*.tsx}"
 start = "typescript-language-server --stdio"
 
 [env]
+CLAUDE_CONFIG_DIR = "/home/runner/workspace/.local/state/claude"
 NODE_ENV = "development"
 
 [[ports]]
