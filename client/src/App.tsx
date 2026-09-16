@@ -1,5 +1,6 @@
 import { Route, Switch } from 'wouter';
 import { useDynamicTheme } from './hooks/use-dynamic-theme';
+import { Layout } from './components/layout';
 import HomePage from './pages/home';
 import SessionsPage from './pages/sessions';
 import CameraWizardPage from './pages/camera-wizard';
@@ -10,22 +11,30 @@ import CameraWizardPage from './pages/camera-wizard';
  * IMPLEMENTATION NOTES FOR AI ARCHITECT:
  * - Uses Wouter for lightweight client-side routing
  * - Dynamic theming based on sun position (implemented in useDynamicTheme hook)
+ * - Persistent glass nav bar + site footer via Layout (applied to every page)
+ * - Manual time-of-day/theme override persisted to localStorage
  * - Three main pages: Home, Sessions, Camera Wizard
  * - Mobile-first responsive design
  * - Theme classes applied to root div for CSS variable cascading
  */
 
 function App() {
-  const { themeType } = useDynamicTheme();
+  const { themeType, sunElevation, override, setOverride } = useDynamicTheme();
 
   return (
     <div className={`min-h-screen theme-${themeType}`}>
-      <Switch>
-        <Route path="/" component={HomePage} />
-        <Route path="/sessions" component={SessionsPage} />
-        <Route path="/camera-wizard" component={CameraWizardPage} />
-        <Route component={NotFoundPage} />
-      </Switch>
+      <Layout
+        override={override}
+        onOverrideChange={setOverride}
+        sunElevation={sunElevation}
+      >
+        <Switch>
+          <Route path="/" component={HomePage} />
+          <Route path="/sessions" component={SessionsPage} />
+          <Route path="/camera-wizard" component={CameraWizardPage} />
+          <Route component={NotFoundPage} />
+        </Switch>
+      </Layout>
     </div>
   );
 }

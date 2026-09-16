@@ -458,6 +458,7 @@ function SessionDetail({
         {/* Readings list */}
         <div className="glass-card p-6">
           <h2 className="text-xl font-bold mb-4">Readings ({readings.length})</h2>
+          {readings.length >= 2 && <ReadingsChart readings={readings} />}
           {readings.length === 0 ? (
             <p className="text-muted-foreground">No readings yet — add your first entry above.</p>
           ) : (
@@ -476,6 +477,74 @@ function SessionDetail({
           )}
         </div>
       </div>
+    </div>
+  );
+}
+/** Light-level history line/area chart (rendered when a session has readings). */
+function ReadingsChart({ readings }: { readings: Reading[] }) {
+  const W = 600;
+  const H = 180;
+  const PAD = 36;
+  const innerW = W - PAD * 2;
+  const innerH = H - PAD * 2;
+
+  const sorted = [...readings].sort((a, b) =>
+    new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+  );
+  const levels = sorted.map((r) => r.lightLevel);
+  const maxLevel = Math.max(...levels, 1);
+  const minLevel = Math.min(...levels, 0);
+  const range = Math.max(maxLevel - minLevel, 1);
+  const start = new Date(sorted[0].timestamp).getTime();
+  const end = new Date(sorted[sorted.length - 1].timestamp).getTime();
+  const span = Math.max(end - start, 1);
+
+  const px = (t: number) => PAD + ((t - start) / span) * innerW;
+  const py = (v: number) => PAD + (1 - (v - minLevel) / range) * innerH;
+
+  const linePath = sorted
+    .map((r, i) => {
+      const t = new Date(r.timestamp).getTime();
+      return `${i === 0 ? 'M' : 'L'}${px(t).toFixed(1)},${py(r.lightLevel).toFixed(1)}`;
+    })
+    .join(' ');
+
+  const areaPath = `${linePath} L${px(end).toFixed(1)},${(PAD + innerH).toFixed(1)} L${px(start).toFixed(1)},${(PAD + innerH).toFixed(1)} Z`;
+
+  return (
+    <div className="mb-5 rounded-xl border border-border bg-background/20 p-2">
+      <div className="flex items-center justify-between px-2 pt-1 pb-2">
+        <span className="text-sm font-semibold">Light Level History</span>
+        <span className="text-xs text-muted-foreground">
+          {formatDateTime(sorted[0].timestamp)} → {formatDateTime(sorted[sorted.length - 1].timestamp)}
+        </span>
+      </div>
+      <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-auto" role="img" aria-label="Light level history chart">
+        <defs>
+          <linearGradient id="readingsFill" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="var(--gradient-primary)" stopOpacity="0.7" />
+            <stop offset="100%" stopColor="var(--gradient-secondary)" stopOpacity="0.1" />
+          </linearGradient>
+        </defs>
+        {[0, 0.5, 1].map((f) => {
+          const gy = (PAD + f * innerH).toFixed(1);
+          const gv = (minLevel + (1 - f) * range).toFixed(0);
+          return (
+            <g key={f}>
+              <line x1={PAD} y1={gy} x2={W - PAD} y2={gy} stroke="var(--border)" strokeWidth="1" strokeDasharray="2 4" />
+              <text x={W - PAD + 4} y={gy} fontSize="10" fill="var(--muted-foreground)">{gv}</text>
+            </g>
+          );
+        })}
+        <path d={areaPath} fill="url(#readingsFill)" />
+        <path d={linePath} fill="none" stroke="var(--primary)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+        {sorted.map((r, i) => {
+          const t = new Date(r.timestamp).getTime();
+          return <circle key={i} cx={px(t)} cy={py(r.lightLevel)} r="4" fill="var(--primary)" stroke="var(--background)" strokeWidth="1.5" />;
+        })}
+        <text x={PAD} y={H - 6} fontSize="10" fill="var(--muted-foreground)">first</text>
+        <text x={W - PAD} y={H - 6} fontSize="10" fill="var(--muted-foreground)" textAnchor="end">latest · lux</text>
+      </svg>
     </div>
   );
 }

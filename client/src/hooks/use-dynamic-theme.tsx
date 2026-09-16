@@ -1,16 +1,17 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getSunPosition } from '@/lib/sun-calc';
 import type { ThemeType } from '@shared/schema';
 
 /**
- * Dynamic Theme Hook
+ * Dynamic Theme Hook with Manual Override
  *
  * IMPLEMENTATION NOTES FOR AI ARCHITECT:
- * - Theme changes based on sun elevation at selected location
+ * - Theme changes based on sun elevation at the selected location
  * - Default location is San Francisco (can be changed by user)
  * - Updates every minute to keep theme current
  * - Theme types: 'day', 'golden', 'blue', 'night'
- * - Used in App.tsx to apply theme class to root element
+ * - A manual override (persisted to localStorage) pins the theme regardless
+ *   of sun position; 'auto' returns to sun-position-driven theming.
  *
  * CUSTOMIZATION POINTS:
  * - Add location context to make this user-configurable
@@ -18,17 +19,40 @@ import type { ThemeType } from '@shared/schema';
  * - Add manual override option
  */
 
+export const THEME_OVERRIDE_KEY = 'lightlog-theme-override';
+
+export type ThemeOverride = ThemeType | 'auto';
+
+const OVERRIDE_VALUES: ThemeOverride[] = ['auto', 'day', 'golden', 'blue', 'night'];
+
+function readStoredOverride(): ThemeOverride {
+  if (typeof window === 'undefined') return 'auto';
+  try {
+    const stored = window.localStorage.getItem(THEME_OVERRIDE_KEY) as ThemeOverride | null;
+    if (stored && OVERRIDE_VALUES.includes(stored)) {
+      return stored;
+    }
+  } catch {
+    // ignore localStorage access errors (private mode, etc.)
+  }
+  return 'auto';
+}
+
 interface UseDynamicThemeReturn {
   themeType: ThemeType;
   sunElevation: number;
+  override: ThemeOverride;
+  setOverride: (override: ThemeOverride) => void;
+  isManual: boolean;
 }
 
 export function useDynamicTheme(
   latitude: number = 37.7749,  // Default: San Francisco
   longitude: number = -122.4194
 ): UseDynamicThemeReturn {
-  const [themeType, setThemeType] = useState<ThemeType>('night');
+  const [autoTheme, setAutoTheme] = useState<ThemeType>('night');
   const [sunElevation, setSunElevation] = useState<number>(0);
+  const [override, setOverrideState] = useState<ThemeOverride>(readStoredOverride);
 
   useEffect(() => {
     const updateTheme = () => {
@@ -37,53 +61,43 @@ export function useDynamicTheme(
 
       setSunElevation(elevation);
 
-      // Determine theme based on sun elevation
       let newTheme: ThemeType;
-
       if (elevation > 6) {
-        // Sun is well above horizon - daytime
         newTheme = 'day';
       } else if (elevation > -0.833) {
-        // Sun near horizon - golden hour
         newTheme = 'golden';
       } else if (elevation > -6) {
-        // Sun just below horizon - blue hour/twilight
         newTheme = 'blue';
       } else {
-        // Sun well below horizon - night
         newTheme = 'night';
       }
 
-      setThemeType(newTheme);
+      setAutoTheme(newTheme);
     };
 
-    // Update immediately
     updateTheme();
-
-    // Update every minute
     const interval = setInterval(updateTheme, 60000);
 
     return () => clearInterval(interval);
   }, [latitude, longitude]);
 
-  return { themeType, sunElevation };
-}
+  // Persist override to localStorage whenever it changes.
+  const setOverride = useCallback((next: ThemeOverride) => {
+    setOverrideState(next);
+    try {
+      window.localStorage.setItem(THEME_OVERRIDE_KEY, next);
+    } catch {
+      // ignore persistence failures
+    }
+  }, []);
 
-/**
- * USAGE EXAMPLE:
- *
- * In a component:
- * ```tsx
- * const { themeType, sunElevation } = useDynamicTheme(userLat, userLon);
- *
- * return (
- *   <div className={`theme-${themeType}`}>
- *     <p>Current elevation: {sunElevation.toFixed(1)}°</p>
- *     <p>Theme: {themeType}</p>
- *   </div>
- * );
- * ```
- *
- * The theme class is applied in App.tsx at the root level,
- * which changes CSS variables throughout the app.
- */
+  const themeType: ThemeType = override === 'auto' ? autoTheme : override;
+
+  return {
+    themeType,
+    sunElevation,
+    override,
+    setOverride,
+    isManual: override !== 'auto',
+  };
+}

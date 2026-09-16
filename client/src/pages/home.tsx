@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { getSunPosition, getSunTimes, getMoonData, getLightingType } from '@/lib/sun-calc';
 import { fetchWeather } from '@/lib/api-client';
+import SunPathChart from '@/components/sun-position-chart';
 import {
   formatTemperature,
   formatPercentage,
@@ -126,6 +127,15 @@ export default function HomePage() {
           {/* Decorative gradient overlay */}
           <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl" />
           <div className="absolute bottom-0 left-0 w-96 h-96 bg-white/5 rounded-full blur-3xl" />
+        </div>
+
+        {/* Sun Elevation Arc Chart */}
+        <div className="glass-card">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-2xl font-bold">Sun Elevation Arc</h2>
+            <span className="text-xs text-muted-foreground">Today · San Francisco, CA</span>
+          </div>
+          <SunPathChart latitude={location.latitude} longitude={location.longitude} />
         </div>
 
         {/* Sun Events Timeline - Responsive Grid */}
