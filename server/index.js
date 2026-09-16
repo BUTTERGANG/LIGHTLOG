@@ -58,18 +58,17 @@ app.use((req, res, next) => {
 app.use('/api', router);
 
 // ============================================================================
-// STATIC FILE SERVING (Production)
+// STATIC FILE SERVING (built client, dev + production)
 // ============================================================================
 
-if (!isDev) {
-  const publicPath = path.join(__dirname, '..', 'public');
-  app.use(express.static(publicPath));
+// The client bundle is built by `npm run build:client` into dist/public.
+const publicPath = path.join(__dirname, '..', 'dist', 'public');
+app.use(express.static(publicPath));
 
-  // SPA fallback - serve index.html for all non-API routes
-  app.get('*', (req, res) => {
-    res.sendFile(path.join(publicPath, 'index.html'));
-  });
-}
+// SPA fallback - serve index.html for all non-API routes
+app.get('*', (req, res) => {
+  res.sendFile(path.join(publicPath, 'index.html'));
+});
 
 // ============================================================================
 // ERROR HANDLING
