@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { Link } from 'wouter';
 import {
   getAllSessions,
   createSession,
@@ -23,6 +24,7 @@ export default function SessionsPage() {
 
   const [showForm, setShowForm] = useState(false);
   const [selectedId, setSelectedId] = useState<number | null>(null);
+  const [autoFocusAdd, setAutoFocusAdd] = useState(false);
 
   // List all sessions
   const { data: sessions, isLoading, error } = useQuery({
@@ -102,9 +104,17 @@ export default function SessionsPage() {
         session={selectedSession}
         readings={readings || []}
         onAddReading={(data) => createReadingMutation.mutate(data)}
-        onDelete={() => deleteSessionMutation.mutate(selectedSession.id!)}
-        onBack={() => setSelectedId(null)}
+        onDelete={() => {
+          if (window.confirm('Delete this session? This cannot be undone.')) {
+            deleteSessionMutation.mutate(selectedSession.id!);
+          }
+        }}
+        onBack={() => {
+          setSelectedId(null);
+          setAutoFocusAdd(false);
+        }}
         pending={createReadingMutation.isPending || deleteSessionMutation.isPending}
+        autoFocusAdd={autoFocusAdd}
       />
     );
   }
@@ -209,21 +219,35 @@ export default function SessionsPage() {
                 {/* Actions */}
                 <div className="flex items-center gap-4 pt-4 border-t border-border/50">
                   <button
-                    onClick={() => session.id && setSelectedId(session.id)}
+                    onClick={() => {
+                      if (session.id) {
+                        setAutoFocusAdd(false);
+                        setSelectedId(session.id);
+                      }
+                    }}
                     className="text-sm font-medium text-primary hover:underline transition-colors"
                   >
                     View Details
                   </button>
                   <span className="text-muted-foreground">•</span>
                   <button
-                    onClick={() => session.id && setSelectedId(session.id)}
+                    onClick={() => {
+                      if (session.id) {
+                        setAutoFocusAdd(true);
+                        setSelectedId(session.id);
+                      }
+                    }}
                     className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
                   >
                     Add Entry
                   </button>
                   <span className="text-muted-foreground">•</span>
                   <button
-                    onClick={() => session.id && deleteSessionMutation.mutate(session.id)}
+                    onClick={() => {
+                      if (session.id && window.confirm('Delete this session? This cannot be undone.')) {
+                        deleteSessionMutation.mutate(session.id);
+                      }
+                    }}
                     className="text-sm font-medium text-destructive hover:underline transition-colors"
                   >
                     Delete
@@ -236,13 +260,13 @@ export default function SessionsPage() {
 
         {/* Back Navigation */}
         <div className="text-center pt-6">
-          <a
+          <Link
             href="/"
             className="inline-flex items-center gap-2 px-6 py-3 rounded-xl glass font-semibold hover-lift transition-all"
           >
             <span>←</span>
             <span>Back to Home</span>
-          </a>
+          </Link>
         </div>
       </div>
     </div>
@@ -365,6 +389,7 @@ function SessionDetail({
   onDelete,
   onBack,
   pending,
+  autoFocusAdd,
 }: {
   session: Session;
   readings: Reading[];
@@ -372,12 +397,22 @@ function SessionDetail({
   onDelete: () => void;
   onBack: () => void;
   pending: boolean;
+  autoFocusAdd?: boolean;
 }) {
   const [lightLevel, setLightLevel] = useState('');
   const [notes, setNotes] = useState('');
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const lightLevelRef = useRef<HTMLInputElement>(null);
   const fmt = (value: string | Date) =>
     formatDateTime(value instanceof Date ? value.toISOString() : value);
+
+  // "Add Entry" from the sessions list lands here and jumps straight into the form.
+  useEffect(() => {
+    if (autoFocusAdd) {
+      lightLevelRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      lightLevelRef.current?.focus();
+    }
+  }, [autoFocusAdd]);
 
   const handleAdd = () => {
     const lvl = parseFloat(lightLevel);
@@ -425,6 +460,7 @@ function SessionDetail({
             <label className="block">
               <span className="text-sm text-muted-foreground">Light Level (lux)</span>
               <input
+                ref={lightLevelRef}
                 type="number"
                 step="any"
                 min="0"

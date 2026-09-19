@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { Link } from 'wouter';
 import { getSunPosition, getSunTimes, getMoonData, getLightingType } from '@/lib/sun-calc';
 import { fetchWeather } from '@/lib/api-client';
 import SunPathChart from '@/components/sun-position-chart';
@@ -37,7 +38,7 @@ export default function HomePage() {
   const lightingType = getLightingType(sunPosition.elevation);
 
   // Fetch weather data
-  const { data: weather } = useQuery({
+  const { data: weather, isLoading: isWeatherLoading, isError: isWeatherError } = useQuery({
     queryKey: ['weather', location.latitude, location.longitude],
     queryFn: () => fetchWeather({
       latitude: location.latitude,
@@ -84,9 +85,6 @@ export default function HomePage() {
                 {location.latitude.toFixed(4)}°, {location.longitude.toFixed(4)}°
               </p>
             </div>
-            <button className="px-4 py-2 rounded-lg bg-primary/20 hover:bg-primary/30 text-primary font-medium transition-colors">
-              📍 Change
-            </button>
           </div>
         </div>
 
@@ -158,7 +156,23 @@ export default function HomePage() {
         {/* Weather & Moon - Side by Side on Desktop */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Weather Card */}
-          {weather && (
+          {isWeatherLoading ? (
+            <div className="glass-card hover-lift">
+              <h2 className="text-2xl font-bold mb-6">Weather</h2>
+              <div className="animate-pulse text-center py-6">
+                <div className="text-4xl mb-3">⏳</div>
+                <p className="text-muted-foreground">Loading weather...</p>
+              </div>
+            </div>
+          ) : isWeatherError ? (
+            <div className="glass-card hover-lift">
+              <h2 className="text-2xl font-bold mb-6">Weather</h2>
+              <div className="text-center py-6">
+                <div className="text-4xl mb-3">⚠️</div>
+                <p className="text-muted-foreground">Weather data is unavailable right now.</p>
+              </div>
+            </div>
+          ) : weather ? (
             <div className="glass-card hover-lift">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-2xl font-bold">Weather</h2>
@@ -192,7 +206,7 @@ export default function HomePage() {
                 </p>
               )}
             </div>
-          )}
+          ) : null}
 
           {/* Moon Card */}
           <div className="glass-card hover-lift">
@@ -219,7 +233,7 @@ export default function HomePage() {
 
         {/* Quick Actions - Animated Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 lg:gap-6">
-          <a
+          <Link
             href="/camera-wizard"
             className="relative overflow-hidden group rounded-2xl p-8 bg-gradient-primary hover-lift transition-all duration-300"
           >
@@ -229,9 +243,9 @@ export default function HomePage() {
               <span className="text-white/80 mt-2">Get optimal settings</span>
             </div>
             <div className="absolute inset-0 bg-white/10 transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left" />
-          </a>
+          </Link>
 
-          <a
+          <Link
             href="/sessions"
             className="relative overflow-hidden group rounded-2xl p-8 bg-gradient-secondary hover-lift transition-all duration-300"
           >
@@ -241,7 +255,7 @@ export default function HomePage() {
               <span className="text-white/80 mt-2">View your history</span>
             </div>
             <div className="absolute inset-0 bg-white/10 transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left" />
-          </a>
+          </Link>
         </div>
       </div>
     </div>

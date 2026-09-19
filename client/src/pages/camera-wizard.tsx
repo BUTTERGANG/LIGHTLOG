@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { Link } from 'wouter';
 import { getSunPosition, getMoonData, getLightingType } from '@/lib/sun-calc';
 import { fetchWeather } from '@/lib/api-client';
 import { formatDegrees, formatTemperature, formatPercentage } from '@/lib/utils';
@@ -119,7 +120,7 @@ export default function CameraWizardPage() {
   const sunPosition = getSunPosition(location.latitude, location.longitude);
   const moonData = getMoonData();
 
-  const { data: weather } = useQuery({
+  const { data: weather, isLoading: isWeatherLoading, isError: isWeatherError } = useQuery({
     queryKey: ['weather', location.latitude, location.longitude],
     queryFn: () => fetchWeather({
       latitude: location.latitude,
@@ -155,7 +156,13 @@ export default function CameraWizardPage() {
             <ConditionStat label="Sun Elevation" value={formatDegrees(sunPosition.elevation)} icon="🌞" />
             <ConditionStat
               label="Conditions"
-              value={weather?.description || 'Clear'}
+              value={
+                isWeatherLoading
+                  ? 'Loading…'
+                  : isWeatherError
+                  ? 'Unavailable'
+                  : weather?.description || 'Clear'
+              }
               icon="🌤️"
             />
           </div>
@@ -224,7 +231,23 @@ export default function CameraWizardPage() {
         {/* Weather & Environment Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Weather */}
-          {weather && (
+          {isWeatherLoading ? (
+            <div className="glass-card hover-lift">
+              <h2 className="text-xl font-bold mb-6">🌤️ Weather Details</h2>
+              <div className="animate-pulse text-center py-4">
+                <div className="text-3xl mb-2">⏳</div>
+                <p className="text-sm text-muted-foreground">Loading weather...</p>
+              </div>
+            </div>
+          ) : isWeatherError ? (
+            <div className="glass-card hover-lift">
+              <h2 className="text-xl font-bold mb-6">🌤️ Weather Details</h2>
+              <div className="text-center py-4">
+                <div className="text-3xl mb-2">⚠️</div>
+                <p className="text-sm text-muted-foreground">Weather data is unavailable right now.</p>
+              </div>
+            </div>
+          ) : weather ? (
             <div className="glass-card hover-lift">
               <h2 className="text-xl font-bold mb-6">🌤️ Weather Details</h2>
               <div className="grid grid-cols-2 gap-4">
@@ -234,7 +257,7 @@ export default function CameraWizardPage() {
                 <WeatherDetail label="Visibility" value={`${(weather.visibility / 1000).toFixed(1)} km`} />
               </div>
             </div>
-          )}
+          ) : null}
 
           {/* Moon Phase */}
           <div className="glass-card hover-lift">
@@ -250,15 +273,12 @@ export default function CameraWizardPage() {
 
         {/* Action Buttons */}
         <div className="flex flex-col sm:flex-row gap-4 justify-center pb-6">
-          <button className="px-8 py-4 rounded-xl bg-gradient-secondary text-white font-semibold hover-lift transition-all">
-            💾 Save Settings (TO IMPLEMENT)
-          </button>
-          <a
+          <Link
             href="/"
             className="px-8 py-4 rounded-xl glass text-center font-semibold hover-lift transition-all"
           >
             ← Back to Home
-          </a>
+          </Link>
         </div>
       </div>
     </div>
